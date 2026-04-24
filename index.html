@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI Экскурсовод</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #f5f5f7; color: #1c1c1e; }
+    .card { background: white; padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 16px; }
+    h2 { margin: 0 0 8px; }
+    input, button { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+    button { background: #007AFF; color: white; font-weight: bold; cursor: pointer; }
+    button:active { background: #0056b3; }
+    #status { text-align: center; color: #666; padding: 20px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="status">📍 Поиск спутников...</div>
+
+  <div id="guide-ui" class="hidden">
+    <div class="card">
+      <h2 id="poi-name">🏛 Объект</h2>
+      <p id="poi-desc">Описание...</p>
+    </div>
+
+    <input type="text" id="question" placeholder="Задайте вопрос об этом месте...">
+    <button onclick="askAI()">🎤 Спросить ИИ</button>
+    <button onclick="speakLast()" style="background:#34C759">🔊 Озвучить ответ</button>
+    <p id="answer" style="white-space: pre-wrap; margin-top:12px;"></p>
+  </div>
+
+  <script>
+    // 🔹 1. ДАННЫЕ ЭКСКУРСИИ (вставь свои координаты и тексты)
+    const POIS = [
+      { id:1, name:"Спасо-Преображенский собор", lat:59.9343, lon:30.3351, text:"Построен в 1750-х годах по проекту Петра Егорова. Главный храм лейб-гвардии Семеновского полка." },
+      { id:2, name:"Исаакиевская площадь", lat:59.9336, lon:30.3067, text:"Центральная площадь Санкт-Петербурга. В центре памятник Николаю I, за ним Исаакиевский собор." }
+    ];
+
+    // 🔹 2. НАСТРОЙКИ
+    const GROQ_KEY = "ТВОЙ_GROQ_API_KEY"; // Получи бесплатно на console.groq.com
+    const MODEL = "llama-3.1-8b-instant";
+    const MAX_RADIUS = 100; // метров
+    let lastAnswer = "";
+    let currentPoi = null;
+
+    // 🔹 3. ФОРМУЛА РАССТОЯНИЯ
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371000, toRad = Math.PI/180;
+      const dLat = (lat2-lat1)*toRad, dLon = (lon2-lon1)*toRad;
+      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*toRad)*Math.cos(lat2*toRad)*Math.sin(dLon/2)**2;
+      return 2*R*Math.asin(Math.sqrt(a));
+    }
+
+    // 🔹 4. ГЕОЛОКАЦИЯ
+    const statusEl = document.getElementById('status');
+    const uiEl = document.getElementById('guide-ui');
+
+    navigator.geolocation.watchPosition(pos => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      let nearest = null, minDist = MAX_RADIUS;
+
+      for (const p of POIS) {
+        const d = haversine(lat, lon, p.lat, p.lon);
+        if (d < minDist) { minDist = d; nearest = p; }
+      }
+
+      if (nearest) {
+        statusEl.classList.add('hidden');
+        uiEl.classList.remove('hidden');
+        currentPoi = nearest;
+        document.getElementById('poi-name').textContent = `🏛 ${nearest.name} (${Math.round(minDist)} м)`;
+        document.getElementById('poi-desc').textContent = nearest.text;
+      } else {
+        statusEl.classList.remove('hidden');
+        uiEl.classList.add('hidden');
+        statusEl.textContent = "📍 Рядом нет объектов. Идём дальше...";
+      }
+    }, err => statusEl.textContent = "❌ GPS недоступен. Проверьте разрешения.", {
+      enableHighAccuracy: false,
+      maximumAge: 15000, // экономим батарею
+      timeout: 5000
+    });
+
+    // 🔹 5. ЗАПРОС К ИИ
+    async function askAI() {
+      const q = document.getElementById('question').value.trim();
+      if (!q || !currentPoi) return alert("Введите вопрос или подойдите к объекту.");
+      
+      document.getElementById('answer').textContent = "🤖 Думаю...";
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: MODEL,
+            messages: [
+              { role: "system", content: "Ты экскурсовод. Отвечай кратко (2-4 предложения), только по фактам из контекста. Если данных нет — скажи честно." },
+              { role: "user", content: `Контекст: ${currentPoi.text}\nВопрос: ${q}` }
+            ],
+            temperature: 0.3
+          })
+        });
+        const data = await res.json();
+        lastAnswer = data.choices[0].message.content;
+        document.getElementById('answer').textContent = lastAnswer;
+      } catch (e) {
+        document.getElementById('answer').textContent = "⚠️ Ошибка сети или лимита ИИ.";
+      }
+    }
+
+    // 🔹 6. ОЗВУЧКА (встроенная в браузер)
+    function speakLast() {
+      if (!lastAnswer) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(lastAnswer);
+      utter.lang = "ru-RU";
+      utter.rate = 1.0;
+      window.speechSynthesis.speak(utter);
+    }
+  </script>
+</body>
+</html>

@@ -3,121 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AI Экскурсовод</title>
+  <title>🏛 AI Экскурсовод</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #f5f5f7; color: #1c1c1e; }
-    .card { background: white; padding: 16px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 16px; }
-    h2 { margin: 0 0 8px; }
-    input, button { width: 100%; padding: 12px; margin: 6px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
-    button { background: #007AFF; color: white; font-weight: bold; cursor: pointer; }
-    button:active { background: #0056b3; }
-    #status { text-align: center; color: #666; padding: 20px; }
-    .hidden { display: none; }
+    :root { --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%); --card: #fff; --txt: #111; --sec: #666; --acc: #007AFF; --bdr: #e5e7eb; --shd: 0 8px 24px rgba(0,0,0,.15); }
+    [data-theme="dark"] { --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); --card: #1e293b; --txt: #f1f5f9; --sec: #94a3b8; --acc: #3b82f6; --bdr: #334155; --shd: 0 8px 24px rgba(0,0,0,.5); }
+    * { box-sizing: border-box; transition: background .3s, color .3s; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: var(--bg); color: var(--txt); min-height: 100vh; }
+    .container { max-width: 480px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .header h1 { margin: 0; font-size: 22px; color: #fff; }
+    .btn-icon { background: rgba(255,255,255,.2); color: #fff; border: none; padding: 8px 10px; border-radius: 10px; font-size: 16px; cursor: pointer; }
+    .card { background: var(--card); padding: 18px; border-radius: 18px; box-shadow: var(--shd); margin-bottom: 14px; }
+    .status { text-align: center; padding: 24px; color: #fff; }
+    .poi-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .dist { background: rgba(0,122,255,.1); color: var(--acc); padding: 4px 8px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+    .desc { line-height: 1.5; color: var(--sec); }
+    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }
+    button { padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: var(--acc); color: #fff; }
+    button:active { opacity: .8; }
+    .qr { background: #FF9500; } .cam { background: #34C759; } .spk { grid-column: span 2; background: #5856D6; }
+    input { width: 100%; padding: 14px; border: 2px solid var(--bdr); border-radius: 12px; font-size: 16px; margin: 8px 0; background: var(--card); color: var(--txt); }
+    #ans { background: var(--card); padding: 14px; border-radius: 12px; margin-top: 10px; white-space: pre-wrap; border: 1px solid var(--bdr); }
+    #reader, #mini-map { width: 100%; border-radius: 14px; margin: 10px 0; display: none; background: #000; }
+    #mini-map { height: 160px; }
+    .map-vis { display: block !important; }
+    .mode { text-align: center; padding: 6px; background: rgba(255,255,255,.15); border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: #fff; }
+    .hid { display: none !important; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 20px; border-radius: 30px; font-size: 14px; z-index: 1000; animation: up .3s; }
+    @keyframes up { from { opacity:0; transform:translateX(-50%) translateY(20px);} to { opacity:1; transform:translateX(-50%) translateY(0);} }
+    .panel { position: fixed; top: 0; right: -100%; width: 85%; max-width: 320px; height: 100%; background: var(--card); padding: 20px; transition: .3s; box-shadow: -5px 0 20px rgba(0,0,0,.3); z-index: 100; }
+    .panel.open { right: 0; }
+    .panel-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--bdr); }
+    .close-p { background: #ef4444; margin-top: 18px; width: 100%; }
+    .mic-wrap { display: flex; justify-content: center; margin: 10px 0; }
+    .mic-btn { width: 64px; height: 64px; border-radius: 50%; background: var(--card); border: 3px solid var(--acc); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: var(--shd); }
+    .mic-listen { border-color: #ef4444; animation: pulse 1.5s infinite; }
+    .mic-proc { border-color: #f59e0b; }
+    .mic-speak { border-color: #3b82f6; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); } 70% { box-shadow: 0 0 0 15px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
   </style>
 </head>
 <body>
-  <div id="status">📍 Поиск спутников...</div>
+<div class="container">
+  <div class="header">
+    <h1>🏛 AI Гид</h1>
+    <div>
+      <button class="btn-icon" onclick="toggleTheme()">🌗</button>
+      <button class="btn-icon" onclick="toggleStats()">📊</button>
+      <button class="btn-icon" onclick="toggleMap()">🗺</button>
+    </div>
+  </div>
+  <div id="mode" class="mode">📡 Поиск спутников...</div>
+  <div id="status" class="status">📍 Подойдите к экспонату или нажмите «Распознать»</div>
 
-  <div id="guide-ui" class="hidden">
+  <div id="guide" class="hid">
     <div class="card">
-      <h2 id="poi-name">🏛 Объект</h2>
-      <p id="poi-desc">Описание...</p>
+      <div class="poi-head">
+        <span style="font-size:28px">🏛</span>
+        <div><h2 id="name" style="margin:0 6px 0 0">Объект</h2><span id="dist" class="dist">0 м</span></div>
+      </div>
+      <p id="desc" class="desc">Описание...</p>
+      <small id="src" style="color:var(--sec)">📍 Определено: <span id="method">GPS</span></small>
     </div>
 
-    <input type="text" id="question" placeholder="Задайте вопрос об этом месте...">
-    <button onclick="askAI()">🎤 Спросить ИИ</button>
-    <button onclick="speakLast()" style="background:#34C759">🔊 Озвучить ответ</button>
-    <p id="answer" style="white-space: pre-wrap; margin-top:12px;"></p>
+    <input type="text" id="q" placeholder="Задайте вопрос или нажмите 🎤 для голосового режима...">
+    <div class="mic-wrap"><div id="mic" class="mic-btn" onclick="toggleVoice()">🎤</div></div>
+    
+    <div class="btns">
+      <button onclick="askAI()">🤖 Спросить ИИ</button>
+      <button class="qr" onclick="toggleQR()">📷 QR-код</button>
+      <button class="cam" onclick="toggleCamera()">🔍 Камера</button>
+      <button class="spk" onclick="speakLast()">🔊 Озвучить ответ</button>
+    </div>
+    <p id="ans"></p>
   </div>
+  <div id="reader"></div>
+  <div id="mini-map"></div>
+</div>
 
-  <script>
-    // 🔹 1. ДАННЫЕ ЭКСКУРСИИ (вставь свои координаты и тексты)
-    const POIS = [
-      { id:1, name:"Спасо-Преображенский собор", lat:59.9343, lon:30.3351, text:"Построен в 1750-х годах по проекту Петра Егорова. Главный храм лейб-гвардии Семеновского полка." },
-      { id:2, name:"Исаакиевская площадь", lat:59.9336, lon:30.3067, text:"Центральная площадь Санкт-Петербурга. В центре памятник Николаю I, за ним Исаакиевский собор." }
-    ];
+<div id="stats-panel" class="panel">
+  <h2>📊 Статистика</h2>
+  <div id="stats-content">Загрузка...</div>
+  <button class="close-p" onclick="toggleStats()">Закрыть</button>
+</div>
 
-    // 🔹 2. НАСТРОЙКИ
-    const GROQ_KEY = "ТВОЙ_GROQ_API_KEY"; // Получи бесплатно на console.groq.com
-    const MODEL = "llama-3.1-8b-instant";
-    const MAX_RADIUS = 100; // метров
-    let lastAnswer = "";
-    let currentPoi = null;
+<script>
+const POIS = [
+  { id:1, name:"Спасо-Преображенский собор", lat:59.9343, lon:30.3351, text:"Построен в 1750-х годах по проекту Петра Егорова. Главный храм лейб-гвардии Семеновского полка. Здесь венчался Пушкин в 1831 году.", qr:"POI_001", hash:"a1b2" },
+  { id:2, name:"Исаакиевская площадь", lat:59.9336, lon:30.3067, text:"Центральная площадь Санкт-Петербурга. В центре памятник Николаю I, за ним Исаакиевский собор.", qr:"POI_002", hash:"f6e5" }
+];
+const CFG = { GROQ:"", LOCAL:"http://127.0.0.1:8080/v1/chat/completions", RADIUS:100, CONF:0.85 };
+let cur=null, lastAns="", qrCode=null, camStream=null, method="GPS", map=null, mks={}, stats=JSON.parse(localStorage.getItem('stats'))||{v:{},q:{},t:Date.now()};
+let voiceState="IDLE", recog=null;
 
-    // 🔹 3. ФОРМУЛА РАССТОЯНИЯ
-    function haversine(lat1, lon1, lat2, lon2) {
-      const R = 6371000, toRad = Math.PI/180;
-      const dLat = (lat2-lat1)*toRad, dLon = (lon2-lon1)*toRad;
-      const a = Math.sin(dLat/2)**2 + Math.cos(lat1*toRad)*Math.cos(lat2*toRad)*Math.sin(dLon/2)**2;
-      return 2*R*Math.asin(Math.sqrt(a));
-    }
+function hav(a1,o1,a2,o2){ const R=6371e3, r=Math.PI/180, d=(a2-a1)*r, l=(o2-o1)*r, a=Math.sin(d/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(l/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
+function toast(m){ const e=document.createElement('div'); e.className='toast'; e.textContent=m; document.body.appendChild(e); setTimeout(()=>e.remove(),3000); }
+function modeUI(m,x=""){ const i={GPS:"📡",QR:"📱",CAM:"🔍",MAN:"✋",VOICE:"🎤"}; document.getElementById('mode').textContent=`${i[m]||"❓"} ${m} ${x}`; }
+function setPoi(p,m,d=null){ cur=p; method=m; document.getElementById('status').classList.add('hid'); document.getElementById('guide').classList.remove('hid'); document.getElementById('name').textContent=p.name; document.getElementById('desc').textContent=p.text; document.getElementById('dist').textContent=d?`${Math.round(d)} м`:""; document.getElementById('method').textContent=m; document.getElementById('ans').textContent=""; lastAns=""; modeUI(m,d?`• ${Math.round(d)} м`:""); toast(`🏛 ${p.name}`); stats.v[p.id]=(stats.v[p.id]||0)+1; localStorage.setItem('stats',JSON.stringify(stats)); if(map) map.setView([p.lat,p.lon],16); }
 
-    // 🔹 4. ГЕОЛОКАЦИЯ
-    const statusEl = document.getElementById('status');
-    const uiEl = document.getElementById('guide-ui');
+// 🗺 КАРТА
+function initMap(){ map=L.map('mini-map').setView([59.934,30.32],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'©OSM'}).addTo(map); POIS.forEach(p=>mks[p.id]=L.marker([p.lat,p.lon]).addTo(map).bindPopup(`<b>${p.name}</b><br><button onclick="selMap(${p.id})">Выбрать</button>`)); }
+function toggleMap(){ const e=document.getElementById('mini-map'); e.classList.toggle('map-vis'); if(!map && e.classList.contains('map-vis')) setTimeout(initMap,100); }
+window.selMap=id=>{ const p=POIS.find(x=>x.id===id); if(p) setPoi(p,"MAN"); };
 
-    navigator.geolocation.watchPosition(pos => {
-      const { latitude: lat, longitude: lon } = pos.coords;
-      let nearest = null, minDist = MAX_RADIUS;
+// 📡 GPS
+function initGPS(){ if(!navigator.geolocation) return document.getElementById('status').textContent="❌ GPS недоступен"; navigator.geolocation.watchPosition(pos=>{ const {latitude:a,longitude:o}=pos.coords; let n=null, d=CFG.RADIUS; for(const p of POIS){ const h=hav(a,o,p.lat,p.lon); if(h<d){d=h;n=p;} } if(n && (!cur || cur.id!==n.id)) setPoi(n,"GPS",d); },()=>modeUI("GPS","• Ошибка"),{enableHighAccuracy:false,maximumAge:20e3,timeout:8e3}); }
 
-      for (const p of POIS) {
-        const d = haversine(lat, lon, p.lat, p.lon);
-        if (d < minDist) { minDist = d; nearest = p; }
-      }
+// 📷 QR & КАМЕРА
+function toggleQR(){ const e=document.getElementById('reader'); if(e.style.display==='block'){ qrCode?.stop(); e.style.display='none'; return; } e.style.display='block'; modeUI("QR","• Наведите"); qrCode=new Html5Qrcode("reader"); qrCode.start({facingMode:"env"},{fps:10,qrbox:{w:200,h:200}},t=>{ const p=POIS.find(x=>x.qr===t||x.id==t); if(p){ setPoi(p,"QR"); qrCode.stop(); e.style.display='none'; } else toast("❌ QR не найден"); },()=>{}); }
+async function toggleCam(){ const v=document.querySelector('video')||document.createElement('video'); if(v.style.display==='block'){ camStream?.getTracks().forEach(t=>t.stop()); v.style.display='none'; return; } modeUI("CAM","• Наведите"); v.style.display='block'; v.autoplay=v.playsinline=true; try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'env',w:320,h:240}}); v.srcObject=camStream; document.body.appendChild(v); setTimeout(capMatch,2500); }catch(e){ toast("❌ Камера недоступна"); } }
+async function capMatch(){ const v=document.querySelector('video'); if(!v||!camStream) return; const c=document.createElement('canvas'); c.w=c.width=320; c.h=c.height=240; c.getContext('2d').drawImage(v,0,0,320,240); camStream.getTracks().forEach(t=>t.stop()); v.style.display='none'; toast("🔍 Анализ..."); const h=pHash(c); let b=null, s=0; for(const p of POIS){ if(!p.hash) continue; const sc=1-(hamDist(h,p.hash)/64); if(sc>s){s=sc;b=p;} } b&&s>=CFG.CONF?setPoi(b,"CAM"):toast("❌ Не распознано"); }
+function pHash(c){ const s=document.createElement('canvas'); s.w=s.h=8; s.getContext('2d').drawImage(c,0,0,8,8); const d=s.getContext('2d').getImageData(0,0,8,8).data; let sum=0,p=[]; for(let i=0;i<64;i++){ const g=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2]; p.push(g); sum+=g; } const avg=sum/64; let h=''; for(const v of p) h+=(v>avg)?'1':'0'; return parseInt(h,2).toString(16).padStart(16,'0'); }
+function hamDist(h1,h2){ let a=BigInt("0x"+h1),b=BigInt("0x"+h2),x=a^b,d=0; while(x>0n){d+=Number(x&1n);x>>=1n;} return d; }
 
-      if (nearest) {
-        statusEl.classList.add('hidden');
-        uiEl.classList.remove('hidden');
-        currentPoi = nearest;
-        document.getElementById('poi-name').textContent = `🏛 ${nearest.name} (${Math.round(minDist)} м)`;
-        document.getElementById('poi-desc').textContent = nearest.text;
-      } else {
-        statusEl.classList.remove('hidden');
-        uiEl.classList.add('hidden');
-        statusEl.textContent = "📍 Рядом нет объектов. Идём дальше...";
-      }
-    }, err => statusEl.textContent = "❌ GPS недоступен. Проверьте разрешения.", {
-      enableHighAccuracy: false,
-      maximumAge: 15000, // экономим батарею
-      timeout: 5000
-    });
+// 🎤 ГОЛОСОВОЕ УПРАВЛЕНИЕ
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function initVoice(){ if(!SR){ toast("❌ Голос не поддерживается"); return; } recog=new SR(); recog.lang='ru-RU'; recog.continuous=true; recog.interimResults=true; recog.onstart=()=>{ voiceState='LISTEN'; updateMic('mic-listen'); }; recog.onend=()=>{ if(voiceState==='LISTEN') setTimeout(()=>{ if(voiceState==='LISTEN') recog.start(); },500); else updateMic(''); }; recog.onerror=e=>{ if(e.error==='no-speech') return; voiceState='IDLE'; updateMic(''); }; recog.onresult=ev=>{ const r=ev.results[ev.results.length-1]; if(r.isFinal) processVoice(r[0].transcript.trim().toLowerCase()); }; }
+function toggleVoice(){ if(!recog) initVoice(); if(voiceState==='LISTEN'||voiceState==='PROC'){ recog.stop(); voiceState='IDLE'; updateMic(''); } else { recog.start(); voiceState='LISTEN'; say("Слушаю вас"); } }
+function updateMic(cls){ const m=document.getElementById('mic'); m.className='mic-btn '+cls; }
+function processVoice(t){ if(t.includes("стоп")||t.includes("замолчи")){ window.speechSynthesis.cancel(); voiceState='LISTEN'; return; } if(t.includes("повтори")||t.includes("ещё")){ speakLast(); return; } if(t.includes("где я")||t.includes("рядом")){ say(cur?`Вы возле ${cur.name}. ${cur.text.substring(0,120)}...`:"Подойдите к объекту."); return; } if(t.includes("расскажи")||t.includes("история")){ say(cur?cur.text:"Подойдите к экспонату."); return; } if(t.includes("тёмная тема")){ toggleTheme(); say("Тема изменена"); return; } if(t.includes("светлая тема")){ if(document.documentElement.getAttribute('data-theme')==='dark') toggleTheme(); say("Тема изменена"); return; } if(t.includes("статистика")){ toggleStats(); say("Статистика открыта"); return; } if(cur){ voiceState='PROC'; recog.stop(); document.getElementById('q').value=t; askAI().then(()=>{ voiceState='LISTEN'; recog.start(); }); } else say("Сначала подойдите к объекту."); }
+function say(txt){ window.speechSynthesis.cancel(); voiceState='SPEAK'; updateMic('mic-speak'); recog.stop(); const u=new SpeechSynthesisUtterance(txt); u.lang='ru-RU'; u.onend=()=>{ voiceState='LISTEN'; updateMic('mic-listen'); recog.start(); }; u.onerror=()=>{ voiceState='LISTEN'; updateMic('mic-listen'); recog.start(); }; window.speechSynthesis.speak(u); }
 
-    // 🔹 5. ЗАПРОС К ИИ
-    async function askAI() {
-      const q = document.getElementById('question').value.trim();
-      if (!q || !currentPoi) return alert("Введите вопрос или подойдите к объекту.");
-      
-      document.getElementById('answer').textContent = "🤖 Думаю...";
-      try {
-        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: MODEL,
-            messages: [
-              { role: "system", content: "Ты экскурсовод. Отвечай кратко (2-4 предложения), только по фактам из контекста. Если данных нет — скажи честно." },
-              { role: "user", content: `Контекст: ${currentPoi.text}\nВопрос: ${q}` }
-            ],
-            temperature: 0.3
-          })
-        });
-        const data = await res.json();
-        lastAnswer = data.choices[0].message.content;
-        document.getElementById('answer').textContent = lastAnswer;
-      } catch (e) {
-        document.getElementById('answer').textContent = "⚠️ Ошибка сети или лимита ИИ.";
-      }
-    }
+// 🤖 ИИ & ОЗВУЧКА
+async function askAI(){ const q=document.getElementById('q').value.trim(); if(!q||!cur) return toast("⚠️ Выберите объект"); document.getElementById('ans').textContent="🤖 Думаю..."; try{ const res=await fetch(CFG.GROQ?"https://api.groq.com/openai/v1/chat/completions":CFG.LOCAL,{method:"POST",headers:CFG.GROQ?{"Auth":`Bearer ${CFG.GROQ}`,"Cont":"app/json"}:{"Cont":"app/json"},body:JSON.stringify({model:CFG.GROQ?"llama-3.1-8b-instant":"local",messages:[{role:"system",content:"Ты экскурсовод. Отвечай кратко (2-4 предложения), только по фактам."},{role:"user",content:`Контекст "${cur.name}": ${cur.text}\nВопрос: ${q}`}],temp:0.3,max_tok:256})}); const d=await res.json(); lastAns=d.choices[0].message.content; document.getElementById('ans').textContent=lastAns; stats.q[cur.id]=(stats.q[cur.id]||0)+1; localStorage.setItem('stats',JSON.stringify(stats)); return lastAns; }catch(e){ document.getElementById('ans').textContent=`⚠️ ${e.message}`; } }
+function speakLast(){ if(!lastAns) return toast("⚠️ Сначала ответ"); say(lastAns); }
 
-    // 🔹 6. ОЗВУЧКА (встроенная в браузер)
-    function speakLast() {
-      if (!lastAnswer) return;
-      window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance(lastAnswer);
-      utter.lang = "ru-RU";
-      utter.rate = 1.0;
-      window.speechSynthesis.speak(utter);
-    }
-  </script>
+// 📊 & 🌗
+function toggleStats(){ const p=document.getElementById('stats-panel'); p.classList.toggle('open'); if(p.classList.contains('open')){ let h=`<div class="panel-item"><span>⏱ Сессия</span><span>${Math.round((Date.now()-stats.t)/60e3)} мин</span></div>`; POIS.forEach(p=>{ const v=stats.v[p.id]||0,q=stats.q[p.id]||0; if(v||q) h+=`<div class="panel-item"><span>${p.name}</span><span>👁${v} 💬${q}</span></div>`; }); document.getElementById('stats-content').innerHTML=h||"Нет данных"; } }
+function toggleTheme(){ const d=document.documentElement.getAttribute('data-theme'); const n=d==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',n); localStorage.setItem('theme',n); }
+function loadTheme(){ const t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'); document.documentElement.setAttribute('data-theme',t); }
+
+document.addEventListener('DOMContentLoaded',()=>{ loadTheme(); initGPS(); if(!CFG.GROQ) console.log("🔧 Локальный ИИ (запусти llama-server)"); });
+</script>
 </body>
 </html>

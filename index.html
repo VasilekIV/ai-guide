@@ -92,8 +92,8 @@
 
 <script>
 const POIS = [
-  { id:1, name:"Спасо-Преображенский собор", lat:59.9343, lon:30.3351, text:"Построен в 1750-х годах по проекту Петра Егорова. Главный храм лейб-гвардии Семеновского полка. Здесь венчался Пушкин в 1831 году.", qr:"POI_001", hash:"a1b2" },
-  { id:2, name:"Исаакиевская площадь", lat:59.9336, lon:30.3067, text:"Центральная площадь Санкт-Петербурга. В центре памятник Николаю I, за ним Исаакиевский собор.", qr:"POI_002", hash:"f6e5" }
+  { id:1, name:"МВК ИДНА",lat:58.134511, lon:52.683936, text:"Выставочный комплекс музея Иднакар", qr:"POI_001", hash:"a1b2" },
+  { id:2, name:"Дом", lat:58.140159, lon:52.640063, text:"Я здесь живу.", qr:"POI_002", hash:"f6e5" }
 ];
 const CFG = { GROQ:"", LOCAL:"http://127.0.0.1:8080/v1/chat/completions", RADIUS:100, CONF:0.85 };
 let cur=null, lastAns="", qrCode=null, camStream=null, method="GPS", map=null, mks={}, stats=JSON.parse(localStorage.getItem('stats'))||{v:{},q:{},t:Date.now()};

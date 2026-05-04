@@ -151,7 +151,7 @@ ${rag.text || "Информация не найдена."}
 
   // 3. API Call
   try {
-    const res = await fetch('http://127.0.0.1:8081/v1/chat/completions', {
+    const res = await fetch('http://127.0.0.1:8080/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

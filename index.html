@@ -3,140 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🏛 AI Экскурсовод</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <title>🏛 Иднакар: Цифровой Гид</title>
   <style>
-    :root { --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%); --card: #fff; --txt: #111; --sec: #666; --acc: #007AFF; --bdr: #e5e7eb; --shd: 0 8px 24px rgba(0,0,0,.15); }
-    [data-theme="dark"] { --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); --card: #1e293b; --txt: #f1f5f9; --sec: #94a3b8; --acc: #3b82f6; --bdr: #334155; --shd: 0 8px 24px rgba(0,0,0,.5); }
-    * { box-sizing: border-box; transition: background .3s, color .3s; }
-    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: var(--bg); color: var(--txt); min-height: 100vh; }
-    .container { max-width: 480px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .header h1 { margin: 0; font-size: 22px; color: #fff; }
-    .btn-icon { background: rgba(255,255,255,.2); color: #fff; border: none; padding: 8px 10px; border-radius: 10px; font-size: 16px; cursor: pointer; }
-    .card { background: var(--card); padding: 18px; border-radius: 18px; box-shadow: var(--shd); margin-bottom: 14px; }
-    .status { text-align: center; padding: 24px; color: #fff; }
-    .poi-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .dist { background: rgba(0,122,255,.1); color: var(--acc); padding: 4px 8px; border-radius: 16px; font-size: 12px; font-weight: 600; }
-    .desc { line-height: 1.5; color: var(--sec); }
-    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 14px 0; }
-    button { padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: var(--acc); color: #fff; }
-    button:active { opacity: .8; }
-    .qr { background: #FF9500; } .cam { background: #34C759; } .spk { grid-column: span 2; background: #5856D6; }
-    input { width: 100%; padding: 14px; border: 2px solid var(--bdr); border-radius: 12px; font-size: 16px; margin: 8px 0; background: var(--card); color: var(--txt); }
-    #ans { background: var(--card); padding: 14px; border-radius: 12px; margin-top: 10px; white-space: pre-wrap; border: 1px solid var(--bdr); }
-    #reader, #mini-map { width: 100%; border-radius: 14px; margin: 10px 0; display: none; background: #000; }
-    #mini-map { height: 160px; }
-    .map-vis { display: block !important; }
-    .mode { text-align: center; padding: 6px; background: rgba(255,255,255,.15); border-radius: 8px; margin-bottom: 10px; font-size: 13px; color: #fff; }
-    .hid { display: none !important; }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 12px 20px; border-radius: 30px; font-size: 14px; z-index: 1000; animation: up .3s; }
-    @keyframes up { from { opacity:0; transform:translateX(-50%) translateY(20px);} to { opacity:1; transform:translateX(-50%) translateY(0);} }
-    .panel { position: fixed; top: 0; right: -100%; width: 85%; max-width: 320px; height: 100%; background: var(--card); padding: 20px; transition: .3s; box-shadow: -5px 0 20px rgba(0,0,0,.3); z-index: 100; }
-    .panel.open { right: 0; }
-    .panel-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--bdr); }
-    .close-p { background: #ef4444; margin-top: 18px; width: 100%; }
-    .mic-wrap { display: flex; justify-content: center; margin: 10px 0; }
-    .mic-btn { width: 64px; height: 64px; border-radius: 50%; background: var(--card); border: 3px solid var(--acc); display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; box-shadow: var(--shd); }
-    .mic-listen { border-color: #ef4444; animation: pulse 1.5s infinite; }
-    .mic-proc { border-color: #f59e0b; }
-    .mic-speak { border-color: #3b82f6; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); } 70% { box-shadow: 0 0 0 15px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+    :root { --bg: #f8f9fa; --card: #ffffff; --txt: #1a1a1a; --sec: #6c757d; --acc: #0d6efd; --acc-h: #0b5ed7; --bdr: #dee2e6; }
+    [data-theme="dark"] { --bg: #0d1117; --card: #161b22; --txt: #c9d1d9; --sec: #8b949e; --acc: #58a6ff; --acc-h: #79c0ff; --bdr: #30363d; }
+    * { box-sizing: border-box; transition: background .2s, color .2s; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 16px; background: var(--bg); color: var(--txt); min-height: 100vh; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--bdr); }
+    .header h1 { margin: 0; font-size: 20px; }
+    .theme-btn { background: none; border: 1px solid var(--bdr); color: var(--txt); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+    
+    .search-box { display: flex; gap: 8px; margin-bottom: 16px; }
+    input { flex: 1; padding: 12px; border: 2px solid var(--bdr); border-radius: 12px; font-size: 16px; background: var(--card); color: var(--txt); }
+    input:focus { outline: none; border-color: var(--acc); }
+    button { padding: 12px 16px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; background: var(--acc); color: #fff; }
+    button:active { opacity: 0.85; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .card { background: var(--card); padding: 16px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 14px; border: 1px solid var(--bdr); }
+    .card h3 { margin: 0 0 8px; font-size: 15px; color: var(--acc); }
+    .card p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--sec); white-space: pre-wrap; }
+    
+    #answer { min-height: 60px; }
+    .voice-btn { background: var(--sec); width: 100%; margin-top: 8px; }
+    .hint { font-size: 12px; color: var(--sec); margin-top: 4px; text-align: center; }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h1>🏛 AI Гид</h1>
-    <div>
-      <button class="btn-icon" onclick="toggleTheme()">🌗</button>
-      <button class="btn-icon" onclick="toggleStats()">📊</button>
-      <button class="btn-icon" onclick="toggleMap()">🗺</button>
-    </div>
+    <h1> Иднакар: Цифровой Гид</h1>
+    <button class="theme-btn" onclick="toggleTheme()">🌗</button>
   </div>
-  <div id="mode" class="mode">📡 Поиск спутников...</div>
-  <div id="status" class="status">📍 Подойдите к экспонату или нажмите «Распознать»</div>
 
-  <div id="guide" class="hid">
-    <div class="card">
-      <div class="poi-head">
-        <span style="font-size:28px">🏛</span>
-        <div><h2 id="name" style="margin:0 6px 0 0">Объект</h2><span id="dist" class="dist">0 м</span></div>
-      </div>
-      <p id="desc" class="desc">Описание...</p>
-      <small id="src" style="color:var(--sec)">📍 Определено: <span id="method">GPS</span></small>
-    </div>
-
-    <input type="text" id="q" placeholder="Задайте вопрос или нажмите 🎤 для голосового режима...">
-    <div class="mic-wrap"><div id="mic" class="mic-btn" onclick="toggleVoice()">🎤</div></div>
-    
-    <div class="btns">
-      <button onclick="askAI()">🤖 Спросить ИИ</button>
-      <button class="qr" onclick="toggleQR()">📷 QR-код</button>
-      <button class="cam" onclick="toggleCamera()">🔍 Камера</button>
-      <button class="spk" onclick="speakLast()">🔊 Озвучить ответ</button>
-    </div>
-    <p id="ans"></p>
+  <div class="search-box">
+    <input type="text" id="query" placeholder="Спросите про укрепления, ремёсла, торговлю...">
+    <button id="sendBtn" onclick="askAI()">🔍</button>
   </div>
-  <div id="reader"></div>
-  <div id="mini-map"></div>
-</div>
+  <div class="hint">💡 Примеры: «Кто основал городище?», «Чем торговали?», «Какое оружие использовали?»</div>
 
-<div id="stats-panel" class="panel">
-  <h2>📊 Статистика</h2>
-  <div id="stats-content">Загрузка...</div>
-  <button class="close-p" onclick="toggleStats()">Закрыть</button>
+  <div id="context-card" class="card" style="display:none;">
+    <h3>📚 Найдено в базе знаний:</h3>
+    <p id="context-text"></p>
+  </div>
+
+  <div id="answer-card" class="card" style="display:none;">
+    <h3>🤖 Ответ гида:</h3>
+    <p id="answer"></p>
+    <button class="voice-btn" onclick="speakLast()">🔊 Озвучить ответ</button>
+  </div>
 </div>
 
 <script>
-const POIS = [
-  { id:1, name:"МВК ИДНА",lat:58.134511, lon:52.683936, text:"Выставочный комплекс музея Иднакар", qr:"POI_001", hash:"a1b2" },
-  { id:2, name:"Дом", lat:58.140159, lon:52.640063, text:"Я здесь живу.", qr:"POI_002", hash:"f6e5" }
-];
-const CFG = { GROQ:"", LOCAL:"http://127.0.0.1:8080/v1/chat/completions", RADIUS:100, CONF:0.85 };
-let cur=null, lastAns="", qrCode=null, camStream=null, method="GPS", map=null, mks={}, stats=JSON.parse(localStorage.getItem('stats'))||{v:{},q:{},t:Date.now()};
-let voiceState="IDLE", recog=null;
+// ═══════════════════════════════════════════════════════════
+//  БАЗА ЗНАНИЙ (Встроена из вашего JSON)
+// ══════════════════════════════════════════════════════════
+const DB = {
+  "metadata": { "title": "ГАЗОВСКИЙ КРАЕВЕДЧЕСКИЙ МУЗЕЙ. ГОРОДИЩЕ ИДНАКАР (IX-XIII вв.)" },
+  "chunks": [
+    {"id":"chunk_001","topic":"Мифологическое происхождение","content":"Согласно удмуртским сказаниям, на гору Солдырь пришёл богатырь Донды с сыновьями: Идна, Гурья, Весья, Зуй. Идна остался на прежнем месте, основав поселение, ставшее центром культуры. Названия деревень Дондыкар, Весьякар, Гурьякар содержат корень 'кар' (удм. 'город', 'городище').","keywords":["Донды","Идна","Гурья","Солдырь","мифология","удмуртский эпос"]},
+    {"id":"chunk_002","topic":"Общая информация об Иднакаре","content":"Солдырское I городище «Иднакар» — крупнейший памятник на севере Удмуртии, расположен в 2 км к западу от дер. Солдырь, в 4 км к востоку от г. Глазова. Расположено на мысу высотой до 40 м при слиянии р. Чепцы и притока Пызеп. Памятник федерального значения. Основано в конце IX века, первоначальная площадь ~10 000 кв.м, к XI в. расширено до 4 га.","keywords":["Иднакар","городище","Чепца","Пызеп","археологический памятник","Удмуртия"]},
+    {"id":"chunk_003","topic":"История изучения","content":"Первые исследования: 1885-1889 гг. — А.А. Спицын и Н.Г. Первухин. 1927-1928 гг. — экспедиция С.Г. Матвеева и А.П. Смирнова. С 1954 г. — Удмуртская археологическая экспедиция под рук. В.Ф. Генинга. С 1974 г. — планомерные раскопки под рук. М.Г. Ивановой. В 1997 г. создан Историко-культурный музей-заповедник «Иднакар».","keywords":["Спицын","Первухин","Смирнов","Генинг","Иванова","раскопки","музей-заповедник"]},
+    {"id":"chunk_004","topic":"Оборонительные сооружения","content":"Иднакар имел три линии укреплений (валы и рвы). Внутренняя линия — самая ранняя (конец IX в.), вторая возведена в X в. (площадь 20 000 кв.м), третья — в XI в. (площадь 4 га). Восточная часть укреплялась наиболее мощно как наиболее уязвимая. Валы из утрамбованной глины с деревянными срубами.","keywords":["валы","рвы","укрепления","оборона","планировка","крепость"]},
+    {"id":"chunk_005","topic":"Жилища и хозяйственные постройки","content":"Жилища прямоугольной формы (~6×8 м, 40-45 кв.м), с очагом из утрамбованной глины в центре, крыша из дёрна/плах/луба. Вдоль стен — дощатые настилы (прообраз пола). Хозяйственные ямы глубиной до 2,5 м, обшитые досками/лубом, для хранения зерна и припасов.","keywords":["жилища","очаг","хозяйственные ямы","строительство","быт"]},
+    {"id":"chunk_006","topic":"Земледелие","content":"Преобладала подсечно-огневая система. Орудия: наральники, мотыги. Возделывали: полбу-двузернянку, яровую рожь, овёс, пшеницу, ячмень, просо, репу, брюкву, горох, чечевицу, лён, коноплю. Для уборки — косы-горбуши, серпы; для обмолота — цепы; для помола — ручные жернова (найдено >100).","keywords":["земледелие","подсека","наральник","зерно","урожай","сельское хозяйство"]},
+    {"id":"chunk_007","topic":"Животноводство","content":"Разводили крупный рогатый скот (коровы 105-111 см), лошадей (местный 'лесной' тип 128-136 см и 'степной' 144 см), мелкий рогатый скот, свиней, домашнюю птицу. Находки: удила, псалии, стремена, ножницы для стрижки овец, остатки шерстяной ткани.","keywords":["животноводство","коровы","лошади","упряжь","шерсть"]},
+    {"id":"chunk_008","topic":"Охота и рыболовство","content":"Основные промысловые животные: бобр (кастореум — экспортный товар), лось, северный олень, белка, куница, медведь. Оружие: лук со стрелами (костяные наконечники), копья, дротики, пищики-манки из костей соболя/куницы. Рыболовство: крючки, блёсны, сети, гарпуны; найдены позвонки сома до 150 кг.","keywords":["охота","рыболовство","бобр","лук","стрелы","пушной промысел"]},
+    {"id":"chunk_009","topic":"Косторезное мастерство","content":"Изделия из кости/рога: наконечники стрел, кочедыки, пряслица, ложки, гребни, копоушки, пронизки-коньки. Орнамент: геометрический (граффити), сюжетные сцены, тамги (знаки собственности). Уникальные находки: печать с знаком, варган, подставки под струны, амулеты, солярный знак-трискелис.","keywords":["кость","резьба","орнамент","гребень","амулет","тамга","варган"]},
+    {"id":"chunk_010","topic":"Ювелирное ремесло","content":"Обработка цветных металлов: бронза, серебро. Технологии: ковка, штамповка, чеканка, литьё по восковым моделям, скань, зернь. Изделия: серьги, шумящие подвески, перстни, браслеты, фибулы, пряжки. Мотивы: Шунды Мумы (Мать солнца), водоплавающие птицы, кони. Импорт: рубчатые перстни (славянское влияние).","keywords":["ювелир","бронза","подвески","скань","зернь","Шунды Мумы","украшения"]},
+    {"id":"chunk_011","topic":"Металлообработка и кузнечное дело","content":"Иднакар — центр железоделательного ремесла. Сырьё: бурые болотные руды (лимониты) из Ярского р-на УР и Омутнинского р-на Кировской обл. Сыродутный способ плавки в домницах. Кузнецы владели: ковкой, сваркой, цементацией. Изделия: орудия труда, оружие, бытовые предметы. Найдено 10 клещей, тигли, льячки, литейные формы.","keywords":["кузнец","железо","домница","крица","ковка","руды","металлургия"]},
+    {"id":"chunk_012","topic":"Военное дело","content":"Оружие дальнего боя: сложносоставной лук (~1,3 м, сила 20-80 кг), стрелы (75-90 см) с втульчатыми/черешковыми наконечниками (двушипные, срезни, бронебойные). Защита: костяные накладки, щитки, кольца. Ближний бой: копья 1,5-2 м. Также: праща, метательные камни. Носили в налучье и колчане (~20 стрел).","keywords":["лук","стрелы","копьё","наконечник","колчан","оружие","оборона"]},
+    {"id":"chunk_013","topic":"Керамика","content":"Местная красная глина с наполнителями (зола, шерсть, песок, шамот). Ленточный способ лепки. Обжиг на костре (650-800°C). Посуда: кухонная (грубая), столовая, ритуальная. Найдена также круговая керамика из Волжской Булгарии (импорт).","keywords":["керамика","глина","обжиг","посуда","гончар","импорт"]},
+    {"id":"chunk_014","topic":"Музыкальная культура","content":"Найдены: варган (ымкрезь) — бронзовая пластинка 6-9 см с язычком; две костяные подставки под струны (кобылки) от щипкового инструмента типа 'пыж крезь'. Аналогии с инструментами манси (санквылтапе) и хантов (нарс-юхе).","keywords":["музыка","варган","ымкрезь","струнный инструмент","кобылка"]},
+    {"id":"chunk_015","topic":"Торговые связи","content":"Водные пути: Чепца-Вятка-Кама-Волга. Импорт: византийские и среднеазиатские сосуды, булгарские чаши (XII в.), стеклянные бусы (Средиземноморье, Египет), сердоликовые/хрустальные бусы (Средняя Азия), янтарные (Прибалтика), монеты (саманидские дирхемы, английский пенни Кнута, саксонский денарий). Экспорт: меха, кастореум.","keywords":["торговля","импорт","бусы","монеты","Волжская Булгария","Византия","пушнина"]},
+    {"id":"chunk_016","topic":"Кушманское городище Учкакар","content":"Расположено в Ярском р-не УР, 1,5 км от дер. Кушман. Датировка: X–XIII вв. Центр аграрно-ремесленного комплекса. Найдены: шумящие подвески, костяной медальон, ажурная фляжчатая подвеска, коньковые пронизки, новгородская посуда, куфические монеты. Уникальные находки: подвеска-птица, зооморфные пронизки из позвонков.","keywords":["Учкакар","Кушман","городище","раскопки","артефакты"]},
+    {"id":"chunk_017","topic":"Погребальные памятники","content":"Могильники грунтовые, на склонах у воды. Захоронения в ямах (глубина 20-60 см), в деревянных гробах/бересте. Женские погребения: украшения (подвески, поясная гарнитура). Мужские: орудия труда, оружие. Обязательны: кресало, кремень, сосуд. Солдырский III могильник: 92 погребения, 32,3% — детские. Средняя продолжительность жизни: женщины 29,6 лет, мужчины 39,3 года.","keywords":["могильник","погребение","обряд","инвентарь","антропология","Солдырский"]},
+    {"id":"chunk_018","topic":"Мифологические представления удмуртов","content":"Пантеон ~40 существ. Низшие духи: коркамурт (домовой), гидкамурт, мунчомурт (банник). Высшие: нюлесьмурт (леший), лудмурт (полевик), вумурт (водяной). Божества: Инмар (верховный), Кылдычин, Куазь; женские — Ву Мумы, Музьем Мумы, Шунды Мумы. Картина мира: трёхчастная (небо-земля-подземелье), Мировое Древо. Сакральные объекты: перекрёстки, границы, реки.","keywords":["мифология","божества","духи","Инмар","Шунды Мумы","Мировое Древо","культ"]},
+    {"id":"chunk_019","topic":"Причины прекращения жизни на городищах","content":"Конец жизнедеятельности на Иднакаре — вторая половина XIII в. Версии: 1) монгольское нашествие; 2) набеги ушкуйников (древнерусские воины на речных судах); 3) экономическая (истощение ресурсов, изменение политической ситуации в Камско-Вятском междуречье).","keywords":["упадок","монголы","ушкуйники","экономика","кризис","миграция"]},
+    {"id":"chunk_020","topic":"Охрана памятников","content":"Иднакар — памятник федерального значения. Закон РФ 'Об объектах культурного наследия' (2002, доп. 2013) требует сохранения археологических памятников. Угроза: 'чёрная археология' — несанкционированные раскопки с металлодетекторами уничтожают контекст и информацию, невозможную для восстановления.","keywords":["охрана","закон","чёрная археология","вандализм","сохранение наследия"]}
+  ]
+};
 
-function hav(a1,o1,a2,o2){ const R=6371e3, r=Math.PI/180, d=(a2-a1)*r, l=(o2-o1)*r, a=Math.sin(d/2)**2+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(l/2)**2; return 2*R*Math.asin(Math.sqrt(a)); }
-function toast(m){ const e=document.createElement('div'); e.className='toast'; e.textContent=m; document.body.appendChild(e); setTimeout(()=>e.remove(),3000); }
-function modeUI(m,x=""){ const i={GPS:"📡",QR:"📱",CAM:"🔍",MAN:"✋",VOICE:"🎤"}; document.getElementById('mode').textContent=`${i[m]||"❓"} ${m} ${x}`; }
-function setPoi(p,m,d=null){ cur=p; method=m; document.getElementById('status').classList.add('hid'); document.getElementById('guide').classList.remove('hid'); document.getElementById('name').textContent=p.name; document.getElementById('desc').textContent=p.text; document.getElementById('dist').textContent=d?`${Math.round(d)} м`:""; document.getElementById('method').textContent=m; document.getElementById('ans').textContent=""; lastAns=""; modeUI(m,d?`• ${Math.round(d)} м`:""); toast(`🏛 ${p.name}`); stats.v[p.id]=(stats.v[p.id]||0)+1; localStorage.setItem('stats',JSON.stringify(stats)); if(map) map.setView([p.lat,p.lon],16); }
+// ═══════════════════════════════════════════════════════════
+//  RAG-ПОИСК (Клиентский поиск по ключевым словам)
+// ═══════════════════════════════════════════════════════════
+function retrieveContext(query) {
+  const q = query.toLowerCase().replace(/[^\wа-яё]/gi, ' ').split(' ').filter(w => w.length > 2);
+  if (q.length === 0) return { text: "", chunks: [] };
 
-// 🗺 КАРТА
-function initMap(){ map=L.map('mini-map').setView([59.934,30.32],15); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'©OSM'}).addTo(map); POIS.forEach(p=>mks[p.id]=L.marker([p.lat,p.lon]).addTo(map).bindPopup(`<b>${p.name}</b><br><button onclick="selMap(${p.id})">Выбрать</button>`)); }
-function toggleMap(){ const e=document.getElementById('mini-map'); e.classList.toggle('map-vis'); if(!map && e.classList.contains('map-vis')) setTimeout(initMap,100); }
-window.selMap=id=>{ const p=POIS.find(x=>x.id===id); if(p) setPoi(p,"MAN"); };
+  let scored = DB.chunks.map(chunk => {
+    let score = 0;
+    const fullText = (chunk.topic + ' ' + chunk.content + ' ' + chunk.keywords.join(' ')).toLowerCase();
+    
+    q.forEach(word => {
+      if (fullText.includes(word)) score += 2;
+      if (chunk.keywords.some(k => k.toLowerCase().includes(word))) score += 4;
+      if (chunk.topic.toLowerCase().includes(word)) score += 3;
+    });
+    return { ...chunk, score };
+  }).filter(c => c.score > 0).sort((a, b) => b.score - a.score).slice(0, 2);
 
-// 📡 GPS
-function initGPS(){ if(!navigator.geolocation) return document.getElementById('status').textContent="❌ GPS недоступен"; navigator.geolocation.watchPosition(pos=>{ const {latitude:a,longitude:o}=pos.coords; let n=null, d=CFG.RADIUS; for(const p of POIS){ const h=hav(a,o,p.lat,p.lon); if(h<d){d=h;n=p;} } if(n && (!cur || cur.id!==n.id)) setPoi(n,"GPS",d); },()=>modeUI("GPS","• Ошибка"),{enableHighAccuracy:false,maximumAge:20e3,timeout:8e3}); }
+  return {
+    text: scored.map(c => `📜 [${c.topic}]\n${c.content}`).join('\n\n'),
+    chunks: scored
+  };
+}
 
-// 📷 QR & КАМЕРА
-function toggleQR(){ const e=document.getElementById('reader'); if(e.style.display==='block'){ qrCode?.stop(); e.style.display='none'; return; } e.style.display='block'; modeUI("QR","• Наведите"); qrCode=new Html5Qrcode("reader"); qrCode.start({facingMode:"env"},{fps:10,qrbox:{w:200,h:200}},t=>{ const p=POIS.find(x=>x.qr===t||x.id==t); if(p){ setPoi(p,"QR"); qrCode.stop(); e.style.display='none'; } else toast("❌ QR не найден"); },()=>{}); }
-async function toggleCam(){ const v=document.querySelector('video')||document.createElement('video'); if(v.style.display==='block'){ camStream?.getTracks().forEach(t=>t.stop()); v.style.display='none'; return; } modeUI("CAM","• Наведите"); v.style.display='block'; v.autoplay=v.playsinline=true; try{ camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'env',w:320,h:240}}); v.srcObject=camStream; document.body.appendChild(v); setTimeout(capMatch,2500); }catch(e){ toast("❌ Камера недоступна"); } }
-async function capMatch(){ const v=document.querySelector('video'); if(!v||!camStream) return; const c=document.createElement('canvas'); c.w=c.width=320; c.h=c.height=240; c.getContext('2d').drawImage(v,0,0,320,240); camStream.getTracks().forEach(t=>t.stop()); v.style.display='none'; toast("🔍 Анализ..."); const h=pHash(c); let b=null, s=0; for(const p of POIS){ if(!p.hash) continue; const sc=1-(hamDist(h,p.hash)/64); if(sc>s){s=sc;b=p;} } b&&s>=CFG.CONF?setPoi(b,"CAM"):toast("❌ Не распознано"); }
-function pHash(c){ const s=document.createElement('canvas'); s.w=s.h=8; s.getContext('2d').drawImage(c,0,0,8,8); const d=s.getContext('2d').getImageData(0,0,8,8).data; let sum=0,p=[]; for(let i=0;i<64;i++){ const g=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2]; p.push(g); sum+=g; } const avg=sum/64; let h=''; for(const v of p) h+=(v>avg)?'1':'0'; return parseInt(h,2).toString(16).padStart(16,'0'); }
-function hamDist(h1,h2){ let a=BigInt("0x"+h1),b=BigInt("0x"+h2),x=a^b,d=0; while(x>0n){d+=Number(x&1n);x>>=1n;} return d; }
+// ═══════════════════════════════════════════════════════════
+//  ЗАПРОС К ИИ (Local llama-server)
+// ═══════════════════════════════════════════════════════════
+async function askAI() {
+  const query = document.getElementById('query').value.trim();
+  if (!query) return;
 
-// 🎤 ГОЛОСОВОЕ УПРАВЛЕНИЕ
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-function initVoice(){ if(!SR){ toast("❌ Голос не поддерживается"); return; } recog=new SR(); recog.lang='ru-RU'; recog.continuous=true; recog.interimResults=true; recog.onstart=()=>{ voiceState='LISTEN'; updateMic('mic-listen'); }; recog.onend=()=>{ if(voiceState==='LISTEN') setTimeout(()=>{ if(voiceState==='LISTEN') recog.start(); },500); else updateMic(''); }; recog.onerror=e=>{ if(e.error==='no-speech') return; voiceState='IDLE'; updateMic(''); }; recog.onresult=ev=>{ const r=ev.results[ev.results.length-1]; if(r.isFinal) processVoice(r[0].transcript.trim().toLowerCase()); }; }
-function toggleVoice(){ if(!recog) initVoice(); if(voiceState==='LISTEN'||voiceState==='PROC'){ recog.stop(); voiceState='IDLE'; updateMic(''); } else { recog.start(); voiceState='LISTEN'; say("Слушаю вас"); } }
-function updateMic(cls){ const m=document.getElementById('mic'); m.className='mic-btn '+cls; }
-function processVoice(t){ if(t.includes("стоп")||t.includes("замолчи")){ window.speechSynthesis.cancel(); voiceState='LISTEN'; return; } if(t.includes("повтори")||t.includes("ещё")){ speakLast(); return; } if(t.includes("где я")||t.includes("рядом")){ say(cur?`Вы возле ${cur.name}. ${cur.text.substring(0,120)}...`:"Подойдите к объекту."); return; } if(t.includes("расскажи")||t.includes("история")){ say(cur?cur.text:"Подойдите к экспонату."); return; } if(t.includes("тёмная тема")){ toggleTheme(); say("Тема изменена"); return; } if(t.includes("светлая тема")){ if(document.documentElement.getAttribute('data-theme')==='dark') toggleTheme(); say("Тема изменена"); return; } if(t.includes("статистика")){ toggleStats(); say("Статистика открыта"); return; } if(cur){ voiceState='PROC'; recog.stop(); document.getElementById('q').value=t; askAI().then(()=>{ voiceState='LISTEN'; recog.start(); }); } else say("Сначала подойдите к объекту."); }
-function say(txt){ window.speechSynthesis.cancel(); voiceState='SPEAK'; updateMic('mic-speak'); recog.stop(); const u=new SpeechSynthesisUtterance(txt); u.lang='ru-RU'; u.onend=()=>{ voiceState='LISTEN'; updateMic('mic-listen'); recog.start(); }; u.onerror=()=>{ voiceState='LISTEN'; updateMic('mic-listen'); recog.start(); }; window.speechSynthesis.speak(u); }
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.textContent = '⏳';
 
-// 🤖 ИИ & ОЗВУЧКА
-async function askAI(){ const q=document.getElementById('q').value.trim(); if(!q||!cur) return toast("⚠️ Выберите объект"); document.getElementById('ans').textContent="🤖 Думаю..."; try{ const res=await fetch(CFG.GROQ?"https://api.groq.com/openai/v1/chat/completions":CFG.LOCAL,{method:"POST",headers:CFG.GROQ?{"Auth":`Bearer ${CFG.GROQ}`,"Cont":"app/json"}:{"Cont":"app/json"},body:JSON.stringify({model:CFG.GROQ?"llama-3.1-8b-instant":"local",messages:[{role:"system",content:"Ты экскурсовод. Отвечай кратко (2-4 предложения), только по фактам."},{role:"user",content:`Контекст "${cur.name}": ${cur.text}\nВопрос: ${q}`}],temp:0.3,max_tok:256})}); const d=await res.json(); lastAns=d.choices[0].message.content; document.getElementById('ans').textContent=lastAns; stats.q[cur.id]=(stats.q[cur.id]||0)+1; localStorage.setItem('stats',JSON.stringify(stats)); return lastAns; }catch(e){ document.getElementById('ans').textContent=`⚠️ ${e.message}`; } }
-function speakLast(){ if(!lastAns) return toast("⚠️ Сначала ответ"); say(lastAns); }
+  // 1. RAG Retrieval
+  const rag = retrieveContext(query);
+  const ctxCard = document.getElementById('context-card');
+  const ctxText = document.getElementById('context-text');
+  
+  if (rag.text) {
+    ctxCard.style.display = 'block';
+    ctxText.textContent = rag.text;
+  } else {
+    ctxCard.style.display = 'none';
+  }
 
-// 📊 & 🌗
-function toggleStats(){ const p=document.getElementById('stats-panel'); p.classList.toggle('open'); if(p.classList.contains('open')){ let h=`<div class="panel-item"><span>⏱ Сессия</span><span>${Math.round((Date.now()-stats.t)/60e3)} мин</span></div>`; POIS.forEach(p=>{ const v=stats.v[p.id]||0,q=stats.q[p.id]||0; if(v||q) h+=`<div class="panel-item"><span>${p.name}</span><span>👁${v} 💬${q}</span></div>`; }); document.getElementById('stats-content').innerHTML=h||"Нет данных"; } }
-function toggleTheme(){ const d=document.documentElement.getAttribute('data-theme'); const n=d==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',n); localStorage.setItem('theme',n); }
-function loadTheme(){ const t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'); document.documentElement.setAttribute('data-theme',t); }
+  // 2. Prompt Construction
+  const systemPrompt = `Ты профессиональный экскурсовод Газовского краеведческого музея и специалист по городищу Иднакар.
+ОТВЕЧАЙ СТРОГО НА ОСНОВЕ ПРЕДОСТАВЛЕННОГО КОНТЕКСТА. 
+ПРАВИЛА:
+1. Не выдумывай факты, даты и имена.
+2. Если в контексте нет ответа, вежливо сообщи: "В имеющихся материалах музея эта информация не отражена."
+3. Отвечай живо, но научно точно. Объём: 3-5 предложений.
+4. Используй только русский язык.
 
-document.addEventListener('DOMContentLoaded',()=>{ loadTheme(); initGPS(); if(!CFG.GROQ) console.log("🔧 Локальный ИИ (запусти llama-server)"); });
+КОНТЕКСТ ИЗ БАЗЫ ЗНАНИЙ:
+${rag.text || "Информация не найдена."}
+
+ВОПРОС ТУРИСТА: ${query}`;
+
+  // 3. API Call
+  try {
+    const res = await fetch('http://127.0.0.1:8080/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'local',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: query }
+        ],
+        temperature: 0.3,
+        max_tokens: 300
+      })
+    });
+    const data = await res.json();
+    const answer = data.choices[0].message.content;
+    
+    document.getElementById('answer-card').style.display = 'block';
+    document.getElementById('answer').textContent = answer;
+    window.lastAnswer = answer;
+  } catch (e) {
+    document.getElementById('answer-card').style.display = 'block';
+    document.getElementById('answer').textContent = '⚠️ Ошибка подключения к ИИ. Убедитесь, что запущен llama-server на порту 8080.';
+  } finally {
+    btn.disabled = false; btn.textContent = '🔍';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// 🔊 ОЗВУЧКА & ТЕМА
+// ═══════════════════════════════════════════════════════════
+function speakLast() {
+  if (!window.lastAnswer) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(window.lastAnswer);
+  u.lang = 'ru-RU'; u.rate = 0.95;
+  window.speechSynthesis.speak(u);
+}
+
+function toggleTheme() {
+  const d = document.documentElement.getAttribute('data-theme');
+  const n = d === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', n);
+  localStorage.setItem('theme', n);
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('data-theme', 'dark');
+  
+  document.getElementById('query').addEventListener('keypress', e => {
+    if (e.key === 'Enter') askAI();
+  });
+});
 </script>
 </body>
 </html>
